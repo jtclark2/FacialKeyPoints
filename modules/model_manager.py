@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from models import Net
 
-from . import display_tools
 
 class ModelManager:
     def __init__(self):
@@ -21,6 +20,7 @@ class ModelManager:
         :return:
             List of points in model space
         """
+
         # Pre-process image
         roi = np.copy(roi_orig)
 
