@@ -42,4 +42,4 @@ class ModelManager:
         predicted_pts = output_pts[0].data  # drop the batch index (this is a single batch)
         predicted_pts = predicted_pts * 50.0 + 100
 
-        return predicted_pts
+        return predicted_pts.numpy()

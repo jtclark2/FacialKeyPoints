@@ -19,8 +19,16 @@ def extract_roi(image, roi_meta, pad=50):
                max(0, x - pad):min(im_width, x + w + pad)]
     return roi
 
+def draw_face_boxes(image, faces):
+    # loop over the detected faces, mark the image where each face is found
+    image_with_detections = image.copy()
+    for (x,y,w,h) in faces:
+        cv2.rectangle(image_with_detections,(x,y),(x+w,y+h),(255,0,0),3)
+        cv2.imshow('camera', image_with_detections)
+    if len(faces) == 0:
+        cv2.imshow('camera', image)
 
-def draw_glasses(image, roi, pts_model):
+def draw_glasses(image, roi, pts_model, name="Glasses"):
     """
     Display sunglasses on top of the image in the appropriate place
     """
@@ -59,5 +67,5 @@ def draw_glasses(image, roi, pts_model):
         # set the area of the image to the changed region with sunglasses
     image_copy[y:y + h, x:x + w] = roi_color
 
-    cv2.imshow("glasses", image_copy)
+    cv2.imshow(name, image_copy)
 

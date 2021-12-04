@@ -22,10 +22,8 @@ def roi_from_model(pt_model, roi_shape, model_shape=(224, 224)):
     :return: pt in roi coordinates
     """
     model_shape = np.array(model_shape)
-    pt_roi = np.array([0, 0])
-
-    pt_roi[0] = pt_model[0] * roi_shape[0] / model_shape[0]
-    pt_roi[1] = pt_model[1] * roi_shape[1] / model_shape[1]
+    roi_shape = np.array(roi_shape[0:2])
+    pt_roi = pt_model * roi_shape / model_shape
     return pt_roi
 
 def camera_from_roi(pt_roi, roi_offset):
@@ -56,8 +54,6 @@ def camera_from_model(pt_model, roi_meta):
     """
     roi_offset = np.array([roi_meta[0], roi_meta[1]])
     roi_shape = np.array([roi_meta[2], roi_meta[3]])
-    pt = np.array([pt_model[0].item(), pt_model[1].item()])
 
-    pt_camera = camera_from_roi(roi_from_model(pt, roi_shape), roi_offset)
+    pt_camera = camera_from_roi(roi_from_model(pt_model, roi_shape), roi_offset)
     return pt_camera
-
