@@ -24,9 +24,14 @@ def draw_face_boxes(image, faces):
     image_with_detections = image.copy()
     for (x,y,w,h) in faces:
         cv2.rectangle(image_with_detections,(x,y),(x+w,y+h),(255,0,0),3)
-        cv2.imshow('camera', image_with_detections)
     if len(faces) == 0:
         cv2.imshow('camera', image)
+        return image
+    else:
+        cv2.imshow('camera', image_with_detections)
+        return image_with_detections
+
+    return
 
 def draw_glasses(image, roi, pts_model, name="Glasses"):
     """
@@ -68,4 +73,5 @@ def draw_glasses(image, roi, pts_model, name="Glasses"):
     image_copy[y:y + h, x:x + w] = roi_color
 
     cv2.imshow(name, image_copy)
+    return image_copy
 

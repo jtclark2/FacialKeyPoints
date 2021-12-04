@@ -16,7 +16,6 @@ class ImageProcess:
         face_cascade = cv2.CascadeClassifier('detector_architectures/haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(image, 1.2, 10)
 
-        display_tools.draw_face_boxes(image, faces)  # multiple faces can be detected
 
         if len(faces) > 0: # Let's play with the first face detection a bit more
             roi_meta = faces[0]
@@ -32,8 +31,9 @@ class ImageProcess:
                                          self.avg_pts,
                                          name="ModelSpace")
             display_tools.overlay_points(roi, roi_pts, name="RoiSpace")
-            display_tools.draw_glasses(image, faces[0], self.avg_pts, name="camera")
+            image = display_tools.draw_glasses(image, faces[0], self.avg_pts, name="camera")
 
+        image = display_tools.draw_face_boxes(image, faces)  # multiple faces can be detected
 
 
 if __name__ == "__main__":
