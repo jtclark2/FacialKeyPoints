@@ -2,21 +2,32 @@ import cv2
 import numpy as np
 from . import converters
 
-def overlay_points(image, pts, name):
+def overlay_points(image, pts):
     im_copy = np.copy(image)
     for point in pts:
         pt = (int(point[0].item()), int(point[1].item()))
         cv2.drawMarker(im_copy, pt, (0, 0, 255), markerType=cv2.MARKER_STAR,
                        markerSize=3, thickness=2, line_type=cv2.LINE_AA)
-    cv2.imshow(name, im_copy)
     return im_copy
 
 
-def extract_roi(image, roi_meta, pad=50):
+def extract_roi(image, roi_meta, pad=.25):
     (x, y, w, h) = roi_meta
+    pad = int( (w**2+h**2)**.5 *pad )
     im_height, im_width, channels = image.shape
-    roi = image[max(0, y - pad):min(im_height, y + h + pad),
-               max(0, x - pad):min(im_width, x + w + pad)]
+    top = y-pad
+    bottom = y+h+pad
+    left = x-pad
+    right = x + w + pad
+
+    # reliably error free, but performance starts to suffer as face squishes on edges
+    # roi = image[max(0, y - pad):min(im_height, y + h + pad),
+    #            max(0, x - pad):min(im_width, x + w + pad)]
+
+    if top < 0 or bottom > image.shape[0] or left < 0 or right > image.shape[1]:
+        return None
+
+    roi = image[top:bottom, left :right]
     return roi
 
 def draw_face_boxes(image, faces):
@@ -25,10 +36,8 @@ def draw_face_boxes(image, faces):
     for (x,y,w,h) in faces:
         cv2.rectangle(image_with_detections,(x,y),(x+w,y+h),(255,0,0),3)
     if len(faces) == 0:
-        cv2.imshow('camera', image)
         return image
     else:
-        cv2.imshow('camera', image_with_detections)
         return image_with_detections
 
     return
@@ -53,10 +62,10 @@ def draw_glasses(image, roi, pts_model, name="Glasses"):
 
 
     # Shift/scale glasses image to match face
-    w *=2
-    h *= 2
-    x -= w//4
-    y -= h//2
+    w = int(w*2.5)
+    h = int(h*2.5)
+    x = int(x-w//3.9)
+    y = int(y-h//2)
 
     # read and resize sunglasses
     sunglasses = cv2.imread('images/sunglasses.png', cv2.IMREAD_UNCHANGED) # read
@@ -72,6 +81,5 @@ def draw_glasses(image, roi, pts_model, name="Glasses"):
         # set the area of the image to the changed region with sunglasses
     image_copy[y:y + h, x:x + w] = roi_color
 
-    cv2.imshow(name, image_copy)
     return image_copy
 
