@@ -3,14 +3,17 @@ import numpy as np
 import torch
 from models import Net
 
-
 class ModelManager:
     def __init__(self):
+        """
+        This class initializes the model, loading a pre-trained model and setting eval mode (to disable dropout, etc.)
+        """
         """load saved model parameters"""
         model_dir = 'saved_models/'
         model_name = 'final_model.pt'  #
         self.model = Net()
         self.model.load_state_dict(torch.load(model_dir + model_name))
+        self.model.eval()
 
     def find_keypoints(self, roi_orig):
         """

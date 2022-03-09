@@ -9,7 +9,7 @@ pad is a buffer optionally applied to the edge of roi
 
 import numpy as np
 
-def roi_from_model(pt_model, roi_shape, model_shape=(224, 224)):
+def crop_from_model(pt_model, roi_shape, model_shape=(224, 224)):
     """
     Convert coordinates from model back to the roi it was sampled from.
 
@@ -55,5 +55,5 @@ def camera_from_model(pt_model, roi_meta):
     roi_offset = np.array([roi_meta[0], roi_meta[1]])
     roi_shape = np.array([roi_meta[2], roi_meta[3]])
 
-    pt_camera = camera_from_roi(roi_from_model(pt_model, roi_shape), roi_offset)
+    pt_camera = camera_from_roi(crop_from_model(pt_model, roi_shape), roi_offset)
     return pt_camera

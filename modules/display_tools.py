@@ -7,12 +7,12 @@ def overlay_points(image, pts):
     for point in pts:
         pt = (int(point[0].item()), int(point[1].item()))
         cv2.drawMarker(im_copy, pt, (0, 0, 255), markerType=cv2.MARKER_STAR,
-                       markerSize=3, thickness=2, line_type=cv2.LINE_AA)
+                       markerSize=1, thickness=2, line_type=cv2.LINE_AA)
     return im_copy
 
 
-def extract_roi(image, roi_meta, pad=.25):
-    (x, y, w, h) = roi_meta
+def extract_roi(image, face_data, pad):
+    (x, y, w, h) = face_data
     pad = int( (w**2+h**2)**.5 *pad )
     im_height, im_width, channels = image.shape
     top = y-pad
@@ -28,25 +28,26 @@ def extract_roi(image, roi_meta, pad=.25):
         return None
 
     roi = image[top:bottom, left :right]
-    return roi
+    padded_face_data = [x-pad, y-pad, w+2*pad, h+2*pad]
+    return padded_face_data, roi
 
-def draw_face_boxes(image, faces):
+def draw_face_boxes(image, faces_data):
     # loop over the detected faces, mark the image where each face is found
     image_with_detections = image.copy()
-    for (x,y,w,h) in faces:
+    for (x,y,w,h) in faces_data:
         cv2.rectangle(image_with_detections,(x,y),(x+w,y+h),(255,0,0),3)
-    if len(faces) == 0:
+    if len(faces_data) == 0:
         return image
     else:
         return image_with_detections
 
     return
 
-def draw_glasses(image, roi, pts_model, name="Glasses"):
+def draw_glasses(image, roi_data, pts_model, scale=1):
     """
     Display sunglasses on top of the image in the appropriate place
     """
-    key_pts = np.array([converters.camera_from_model(pt, roi) for pt in pts_model])
+    key_pts = np.array([converters.camera_from_model(pt, roi_data) for pt in pts_model])
 
     # copy of the face image for overlay
     image_copy = np.copy(image)
@@ -57,16 +58,24 @@ def draw_glasses(image, roi, pts_model, name="Glasses"):
     y = int(key_pts[17, 1])
 
     # height and width of sunglasses
-    h = int(abs(key_pts[27, 1] - key_pts[34, 1])) # h = length of nose
-    w = int(abs(key_pts[17, 0] - key_pts[26, 0])) # w = left to right eyebrow edges
+    h = int(abs(key_pts[27, 1] - key_pts[34, 1]) * scale) # h = length of nose
+    w = int(abs(key_pts[17, 0] - key_pts[26, 0]) * scale) # w = left to right eyebrow edges
 
 
     # Shift/scale glasses image to match face
-    w = int(w*2.5)
-    h = int(h*2.5)
-    x = int(x-w//3.9)
-    y = int(y-h//2)
+    # arbitrary constant to shift glasses a bit, since image corners aren't perfectly aligned with eye corners (TODO: moves magic number)
+    x = int(x + w//30)
+    y = int(y - h//10)
+    w = int(w)
+    h = int(h)
 
+    # Shift to adjust for scale factor
+    x -= int((scale-1)*w/2)
+    y -= int((scale-1)*h/2)
+
+    if(w == 0 or h == 0):
+        print("Warning: Image/glasses too small. Exiting without applying overlay.")
+    print("scale: ", scale, w, h)
     # read and resize sunglasses
     sunglasses = cv2.imread('images/sunglasses.png', cv2.IMREAD_UNCHANGED) # read
     new_sunglasses = cv2.resize(sunglasses, (w, h), interpolation=cv2.INTER_CUBIC) #resize
