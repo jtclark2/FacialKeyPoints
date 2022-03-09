@@ -19,25 +19,22 @@ class ImageProcess:
         if len(faces) > 0: # Let's play with the first face detection a bit more
             faces = sorted(faces, key=lambda x: x[2], reverse=True)
             # for face in faces:
-            roi_meta = faces[0]
-            roi = display_tools.extract_roi(image, roi_meta)
-            if roi is None:
+            raw_face_data = faces[0]
+            padded_face_data, cropped_face_im = display_tools.extract_roi(image, raw_face_data, pad=.09)
+            if cropped_face_im is None:
                 return
-            key_points = model.find_keypoints(roi) # Keypoints in model-space
-            if(self.avg_pts[0][0] == 0):
-                self.avg_pts = key_points
-            else:
-                self.avg_pts = (self.avg_pts * (self.avg_duration - 1) + key_points) / self.avg_duration
-            roi_pts = np.array([converters.roi_from_model(pt, roi.shape) for pt in self.avg_pts])
+            key_points = model.find_keypoints(cropped_face_im) # Keypoints in model-space (224x224)
 
-            model_space_image = display_tools.overlay_points(cv2.resize(roi, (224, 224)),
-                                         self.avg_pts)
+            crop_pts = np.array([converters.crop_from_model(pt, cropped_face_im.shape) for pt in key_points])
+
+            model_space_image = cv2.resize(cropped_face_im, (224, 224))
+            model_space_image = display_tools.overlay_points(model_space_image, key_points)
             cv2.imshow("ModelSpace", model_space_image)
 
-            roi_space_image = display_tools.overlay_points(roi, roi_pts)
-            cv2.imshow("RoiSpace", roi_space_image)
+            cropped_space_image = display_tools.overlay_points(cropped_face_im, crop_pts)
+            cv2.imshow("CroppedSpace", cropped_space_image)
 
-            image = display_tools.draw_glasses(image, faces[0], self.avg_pts, name="camera")
+            image = display_tools.draw_glasses(image, padded_face_data, key_points, scale=1.25)
 
         with_glasses_image = display_tools.draw_face_boxes(image, faces)  # multiple faces can be detected
         cv2.imshow("With Shades", with_glasses_image)
